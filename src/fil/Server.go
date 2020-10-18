@@ -2,16 +2,17 @@ package fil
 
 import (
 	"fil/endpoints"
+	"fil/requests"
 	"fmt"
 	"net"
 	"sync"
 )
 
 type Server struct {
-
 	*endpoints.Address
-	Clients []*net.Conn
+	Clients          []*net.Conn
 	ConnectionWaiter *sync.WaitGroup
+	RequestHandler   func(client *net.Conn, request *requests.Request)
 }
 
 func (s *Server) Start() {
@@ -56,19 +57,23 @@ func (s *Server) Close() {
 
 func (s *Server) handleClient(socket *net.Conn) {
 
-	// SEND filters list
 	for {
 
-		received := endpoints.Await(socket)
-		id := (*received).Info().Id
+		received, err, err_id := endpoints.Await(socket)
 
-		if received != nil {
+		if err == nil {
 			fmt.Printf("Deserialized a [%v] Request\n", (*received).Name())
-			if (*received).NeedsResponse() {
-				endpoints.SendRequestOn(socket, (*received).GetResult())
+			if s.RequestHandler != nil {
+				s.RequestHandler(socket, received)
+			} else {
+				s.Close()
+				panic("server doesn't have RequestHandler. stopping server")
 			}
+		} else if err_id <= 255 {
+			fmt.Printf("Error : unknown id %v\n", err_id)
 		} else {
-			fmt.Printf("Error : unknown id %v\n", id)
+			fmt.Printf("Couldn't use socket. Connection must be closed. %v\n", err)
+			break
 		}
 	}
 }

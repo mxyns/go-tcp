@@ -13,21 +13,19 @@ type textRequest struct {
 }
 
 func init() {
-	RegisterRequestType(1, func(reqInfo *RequestInfo) Request { return &textRequest { info: reqInfo } })
+	RegisterRequestType(1, func(reqInfo *RequestInfo) Request { return &textRequest{info: reqInfo} })
 }
 
 func MakeTextRequest(text string) *textRequest {
-	return &textRequest {
-		info : &RequestInfo{ Id: 1 },
-		text : text,
+	return &textRequest{
+		info: &RequestInfo{Id: 1, WantsResponse: false},
+		text: text,
 	}
 }
 
-func (tr *textRequest) Name() string { return "Text" }
+func (tr *textRequest) Name() string       { return "Text" }
 func (tr *textRequest) Info() *RequestInfo { return tr.info }
-func (tr *textRequest) Id() byte { return tr.info.Id }
-func (tr *textRequest) NeedsResponse() bool { return false }
-func (tr *textRequest) DataSize() uint32 { return uint32(len([]byte(tr.text))) }
+func (tr *textRequest) DataSize() uint32   { return uint32(len([]byte(tr.text))) }
 
 func (tr *textRequest) SerializeTo(conn *net.Conn) {
 
@@ -39,7 +37,7 @@ func (tr *textRequest) SerializeTo(conn *net.Conn) {
 }
 func (tr *textRequest) DeserializeFrom(conn *net.Conn) Request {
 
-	length := make([]byte, 32 / 8)
+	length := make([]byte, 32/8)
 	_, _ = (*conn).Read(length)
 	fmt.Printf("Received length : %v\n", binary.BigEndian.Uint32(length))
 	data := make([]byte, binary.BigEndian.Uint32(length))
@@ -49,7 +47,6 @@ func (tr *textRequest) DeserializeFrom(conn *net.Conn) Request {
 
 	return tr
 }
-
 
 func (tr *textRequest) GetResult() Request {
 

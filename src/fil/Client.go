@@ -5,6 +5,7 @@ import (
 	"fil/requests"
 	"fmt"
 	"net"
+	"time"
 )
 
 type Client struct {
@@ -12,19 +13,28 @@ type Client struct {
 	Socket *net.Conn
 }
 
-func (c *Client) Start() *Client {
+func (c *Client) Start(timeout string) *Client {
 
-	fmt.Printf("Trying to connect to %v://%v", c.Proto, c.Address.ToString())
-	socket, _ := net.Dial(c.Proto, c.Address.ToString())
+	fmt.Printf("Trying to connect to %v://%v... ", c.Proto, c.Address.ToString())
+	timeout_duration, err := time.ParseDuration(timeout)
+	socket, err := net.DialTimeout(c.Proto, c.Address.ToString(), timeout_duration)
+	if err != nil {
+		fmt.Printf("Couldn't reach target. Stopping. %v\n", err)
+		return nil
+	}
 	fmt.Println("Connected.")
-	// GET filters list
 	c.Socket = &socket
 
 	return c
 }
 func (c *Client) Close() {
 
-	fmt.Printf("Closing Client\n")
+	fmt.Println("Closing Client")
+	if c.Socket == nil {
+		fmt.Println("Client already closed.")
+		return
+	}
+
 	err := (*c.Socket).Close()
 	if err != nil {
 		fmt.Printf("Closed Client socket, caused : %v", err)
@@ -32,5 +42,6 @@ func (c *Client) Close() {
 }
 func (c *Client) Send(request requests.Request) *requests.Request {
 
-	return endpoints.SendRequestOn(c.Socket, request)
+	response, _, _ := endpoints.SendRequestOn(c.Socket, request)
+	return response
 }
