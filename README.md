@@ -10,7 +10,7 @@ launch arguments :
 * `-t 1000` connection timeout (client) in milliseconds
 
 # importing the package
-`import "github.com/mxyns/go-tcp/"`
+`import "github.com/mxyns/go-tcp/src/filet"`
 
 # using the package
 ## server
