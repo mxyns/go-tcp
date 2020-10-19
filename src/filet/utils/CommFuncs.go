@@ -1,8 +1,8 @@
-package endpoints
+package utils
 
 import (
 	"encoding/binary"
-	"fil/requests"
+	"filet/requests"
 	"fmt"
 	"io"
 	"net"

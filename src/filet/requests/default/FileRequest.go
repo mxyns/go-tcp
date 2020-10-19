@@ -1,8 +1,9 @@
-package requests
+package _default
 
 import (
 	"encoding/binary"
 	fio "fileio"
+	"filet/requests"
 	"fmt"
 	"net"
 	"os"
@@ -10,7 +11,7 @@ import (
 )
 
 type fileRequest struct {
-	info          *RequestInfo
+	info          *requests.RequestInfo
 	in_path       string
 	out_path      string
 	wantsResponse bool
@@ -18,19 +19,19 @@ type fileRequest struct {
 
 func init() {
 
-	RegisterRequestType(2, func(reqInfo *RequestInfo) Request { return &fileRequest{info: reqInfo} })
+	requests.RegisterRequestType(2, func(reqInfo *requests.RequestInfo) requests.Request { return &fileRequest{info: reqInfo} })
 }
 
 func MakeFileRequest(in string, wantsResponse bool) *fileRequest {
 
 	return &fileRequest{
-		info:    &RequestInfo{Id: 2, WantsResponse: wantsResponse},
+		info:    &requests.RequestInfo{Id: 2, WantsResponse: wantsResponse},
 		in_path: in,
 	}
 }
 
-func (fr *fileRequest) Name() string       { return "File" }
-func (fr *fileRequest) Info() *RequestInfo { return fr.info }
+func (fr *fileRequest) Name() string                { return "File" }
+func (fr *fileRequest) Info() *requests.RequestInfo { return fr.info }
 func (fr *fileRequest) DataSize() uint32 {
 	stat, err := os.Stat(fr.in_path)
 	if err != nil || stat.IsDir() || stat.Size() > 1<<32-1 {
@@ -50,7 +51,7 @@ func (fr *fileRequest) SerializeTo(conn *net.Conn) {
 		(*conn).Close()
 	}
 }
-func (fr *fileRequest) DeserializeFrom(conn *net.Conn) Request {
+func (fr *fileRequest) DeserializeFrom(conn *net.Conn) requests.Request {
 
 	length := make([]byte, 32/8)
 	_, _ = (*conn).Read(length)
@@ -68,7 +69,7 @@ func (fr *fileRequest) DeserializeFrom(conn *net.Conn) Request {
 	return nil
 }
 
-func (fr *fileRequest) GetResult() Request {
+func (fr *fileRequest) GetResult() requests.Request {
 
 	shards := strings.Split(fr.out_path, "/")
 

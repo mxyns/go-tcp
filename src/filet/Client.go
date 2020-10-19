@@ -1,15 +1,15 @@
-package fil
+package filet
 
 import (
-	"fil/endpoints"
-	"fil/requests"
+	"filet/requests"
+	"filet/utils"
 	"fmt"
 	"net"
 	"time"
 )
 
 type Client struct {
-	*endpoints.Address
+	*utils.Address
 	Socket *net.Conn
 }
 
@@ -42,6 +42,6 @@ func (c *Client) Close() {
 }
 func (c *Client) Send(request requests.Request) *requests.Request {
 
-	response, _, _ := endpoints.SendRequestOn(c.Socket, request)
+	response, _, _ := utils.SendRequestOn(c.Socket, request)
 	return response
 }

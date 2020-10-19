@@ -1,9 +1,8 @@
-package endpoints
+package utils
 
 import "strconv"
 
 type Address struct {
-
 	Proto string
 	Addr  string
 	Port  uint32

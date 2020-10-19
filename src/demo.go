@@ -2,10 +2,11 @@ package main
 
 import (
 	"bufio"
-	"fil"
-	"fil/endpoints"
-	"fil/requests"
 	fio "fileio"
+	"filet"
+	"filet/requests"
+	defaultRequests "filet/requests/default"
+	"filet/utils"
 	"flag"
 	"fmt"
 	"net"
@@ -25,11 +26,11 @@ func main() {
 	openedConnections := sync.WaitGroup{}
 	openedConnections.Add(1)
 
-	var server *fil.Server
-	var client *fil.Client
+	var server *filet.Server
+	var client *filet.Client
 	if *runServer {
-		server = &fil.Server{
-			Address: &endpoints.Address{
+		server = &filet.Server{
+			Address: &utils.Address{
 				Proto: *proto,
 				Addr:  *address,
 				Port:  port,
@@ -41,7 +42,7 @@ func main() {
 				fmt.Printf("Received packet %v\n", (*received).Info().Id)
 
 				if (*received).Info().WantsResponse {
-					_, _, _ = endpoints.SendRequestOn(client, (*received).GetResult())
+					_, _, _ = utils.SendRequestOn(client, (*received).GetResult())
 				}
 			},
 		}
@@ -51,8 +52,8 @@ func main() {
 
 	} else {
 
-		client = (&fil.Client{
-			Address: &endpoints.Address{
+		client = (&filet.Client{
+			Address: &utils.Address{
 				Proto: *proto,
 				Addr:  *address,
 				Port:  port,
@@ -60,18 +61,18 @@ func main() {
 		}).Start(*timeout)
 		defer client.Close()
 
-		client.Send(requests.MakeTextRequest("test123 test 1 2 1 2 test 1 2 3"))
-		client.Send(requests.MakeFileRequest("./test.txt", false))
-		client.Send(requests.MakeTextRequest("à Kadoc"))
-		client.Send(requests.MakeFileRequest("./8.png", true))
-		client.Send(requests.MakeTextRequest("en garde ma mignonne"))
+		client.Send(defaultRequests.MakeTextRequest("test123 test 1 2 1 2 test 1 2 3"))
+		client.Send(defaultRequests.MakeFileRequest("./res/test.txt", false))
+		client.Send(defaultRequests.MakeTextRequest("à Kadoc"))
+		client.Send(defaultRequests.MakeFileRequest("./res/8.png", true))
+		client.Send(defaultRequests.MakeTextRequest("en garde ma mignonne"))
 	}
 
 	terminalInput(server, &openedConnections)
 	openedConnections.Wait()
 }
 
-func terminalInput(server *fil.Server, group *sync.WaitGroup) {
+func terminalInput(server *filet.Server, group *sync.WaitGroup) {
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
