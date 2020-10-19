@@ -28,25 +28,33 @@ func (tr *textRequest) Name() string                { return "Text" }
 func (tr *textRequest) Info() *requests.RequestInfo { return tr.info }
 func (tr *textRequest) DataSize() uint32            { return uint32(len([]byte(tr.text))) }
 
-func (tr *textRequest) SerializeTo(conn *net.Conn) {
+func (tr *textRequest) SerializeTo(conn *net.Conn) error {
 
 	data := []byte(tr.text)
 	n, err := (*conn).Write(data)
 	if n != len(data) {
-		fmt.Printf("Didn't send as much text as I had : %v\n", err)
+		return fmt.Errorf("didn't send as much text as I had : %v\n", err)
 	}
+
+	return nil
 }
-func (tr *textRequest) DeserializeFrom(conn *net.Conn) requests.Request {
+func (tr *textRequest) DeserializeFrom(conn *net.Conn) (requests.Request, error) {
 
 	length := make([]byte, 32/8)
-	_, _ = (*conn).Read(length)
-	fmt.Printf("Received length : %v\n", binary.BigEndian.Uint32(length))
+	_, err := (*conn).Read(length)
+	if err != nil {
+		return tr, err
+	}
 	data := make([]byte, binary.BigEndian.Uint32(length))
-	n, _ := io.ReadFull(*conn, data)
-	tr.text = string(data)
-	fmt.Printf("Read %v bytes giving me : '%v'\n", n, tr.text)
+	_, err = io.ReadFull(*conn, data)
 
-	return tr
+	if err != nil {
+		return tr, err
+	}
+
+	tr.text = string(data)
+
+	return tr, err
 }
 
 func (tr *textRequest) GetResult() requests.Request {

@@ -42,37 +42,35 @@ func (fr *fileRequest) DataSize() uint32 {
 	return uint32(stat.Size())
 }
 
-func (fr *fileRequest) SerializeTo(conn *net.Conn) {
+func (fr *fileRequest) SerializeTo(conn *net.Conn) error {
 
 	_, err := fio.StreamFromFile(conn, fr.in_path)
 	if err != nil {
 		// FIXME fill the gap with zeros ?
-		fmt.Printf("Error while serializing file. Can't continue. Closing connection.\n%v", err)
-		(*conn).Close()
+		return err
 	}
+
+	return err
 }
-func (fr *fileRequest) DeserializeFrom(conn *net.Conn) requests.Request {
+func (fr *fileRequest) DeserializeFrom(conn *net.Conn) (requests.Request, error) {
 
 	length := make([]byte, 32/8)
 	_, _ = (*conn).Read(length)
 	data_length := binary.BigEndian.Uint32(length)
-
-	fmt.Printf("Received length : %v\n", data_length)
 	name, read, err := fio.WriteStreamToFile(conn, "dl", data_length)
 
-	if err == nil {
-		fr.out_path = name
-		fmt.Printf("File received, %v bytes saved to %v.\n", read, fr.out_path)
-		return fr
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	fr.out_path = name
+	fmt.Printf("File received, %v bytes saved to %v.\n", read, fr.out_path)
+	return fr, nil
 }
 
 func (fr *fileRequest) GetResult() requests.Request {
 
 	shards := strings.Split(fr.out_path, "/")
 
-	// TODO make it a File Id Response/Request kinda thing
 	return MakeTextRequest(shards[len(shards)-1])
 }

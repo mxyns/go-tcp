@@ -2,14 +2,13 @@ package filet
 
 import (
 	"filet/requests"
-	"filet/utils"
 	"fmt"
 	"net"
 	"sync"
 )
 
 type Server struct {
-	*utils.Address
+	*Address
 	Clients          []*net.Conn
 	ConnectionWaiter *sync.WaitGroup
 	RequestHandler   func(client *net.Conn, request *requests.Request)
@@ -59,7 +58,7 @@ func (s *Server) handleClient(socket *net.Conn) {
 
 	for {
 
-		received, err, err_id := utils.Await(socket)
+		received, err, err_id := Await(socket)
 
 		if err == nil {
 			fmt.Printf("Deserialized a [%v] Request\n", (*received).Name())

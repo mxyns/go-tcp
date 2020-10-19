@@ -6,7 +6,6 @@ import (
 	"filet"
 	"filet/requests"
 	defaultRequests "filet/requests/default"
-	"filet/utils"
 	"flag"
 	"fmt"
 	"net"
@@ -27,10 +26,9 @@ func main() {
 	openedConnections.Add(1)
 
 	var server *filet.Server
-	var client *filet.Client
 	if *runServer {
 		server = &filet.Server{
-			Address: &utils.Address{
+			Address: &filet.Address{
 				Proto: *proto,
 				Addr:  *address,
 				Port:  port,
@@ -42,7 +40,8 @@ func main() {
 				fmt.Printf("Received packet %v\n", (*received).Info().Id)
 
 				if (*received).Info().WantsResponse {
-					_, _, _ = utils.SendRequestOn(client, (*received).GetResult())
+					response := (*received).GetResult()
+					_, _, _ = filet.SendRequestOn(client, &response)
 				}
 			},
 		}
@@ -52,19 +51,24 @@ func main() {
 
 	} else {
 
-		client = (&filet.Client{
-			Address: &utils.Address{
+		client, err := (&filet.Client{
+			Address: &filet.Address{
 				Proto: *proto,
 				Addr:  *address,
 				Port:  port,
 			},
 		}).Start(*timeout)
+
+		if err != nil {
+			fmt.Printf("Client couldn't connect to server. %v", err)
+			return
+		}
 		defer client.Close()
 
 		client.Send(defaultRequests.MakeTextRequest("test123 test 1 2 1 2 test 1 2 3"))
-		client.Send(defaultRequests.MakeFileRequest("./res/test.txt", false))
+		client.Send(defaultRequests.MakeFileRequest("./example/res/test.txt", false))
 		client.Send(defaultRequests.MakeTextRequest("à Kadoc"))
-		client.Send(defaultRequests.MakeFileRequest("./res/8.png", true))
+		client.Send(defaultRequests.MakeFileRequest("./example/res/jc.jpg", true))
 		client.Send(defaultRequests.MakeTextRequest("en garde ma mignonne"))
 	}
 

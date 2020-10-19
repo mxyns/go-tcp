@@ -22,8 +22,8 @@ func init() {
 }
 
 type Request interface {
-	SerializeTo(conn *net.Conn)
-	DeserializeFrom(conn *net.Conn) Request
+	SerializeTo(conn *net.Conn) error
+	DeserializeFrom(conn *net.Conn) (Request, error)
 	DataSize() uint32
 	Name() string
 	Info() *RequestInfo
@@ -38,7 +38,15 @@ func (req *RequestInfo) BuildFrom(conn *net.Conn) Request {
 
 	tyqe := requestRegister[req.Id]
 	if tyqe != nil {
-		return requestRegister[req.Id](req).DeserializeFrom(conn)
+
+		received, err := requestRegister[req.Id](req).DeserializeFrom(conn)
+		if err != nil {
+			fmt.Printf("Error while deserializing request. Stopping. %v", err)
+			(*conn).Close()
+			return nil
+		}
+		return received
+
 	} else {
 		return nil
 	}
