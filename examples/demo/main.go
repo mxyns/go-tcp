@@ -66,9 +66,9 @@ func main() {
 		defer client.Close()
 
 		client.Send(defaultRequests.MakeTextRequest("test123 test 1 2 1 2 test 1 2 3"))
-		client.Send(defaultRequests.MakeFileRequest("./example/res/test.txt", false))
+		client.Send(defaultRequests.MakeFileRequest("./examples/res/test.txt", false))
 		client.Send(defaultRequests.MakeTextRequest("à Kadoc"))
-		client.Send(defaultRequests.MakeFileRequest("./example/res/jc.jpg", true))
+		client.Send(defaultRequests.MakeFileRequest("./examples/res/jc.jpg", true))
 		client.Send(defaultRequests.MakeTextRequest("en garde ma mignonne"))
 	}
 

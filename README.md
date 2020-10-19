@@ -20,7 +20,7 @@ import (
 
 # using the package
 ## server
-example took from [demo.go](https://github.com/mxyns/go-tcp/blob/master/example/demo.go)
+example took from [demo](https://github.com/mxyns/go-tcp/tree/master/examples/demo/main.go)
 ```go
 openedConnections := sync.WaitGroup{}
 openedConnections.Add(1)
@@ -51,7 +51,7 @@ openedConnections.Wait()
 ```
 
 ## client
-example took from [demo.go](https://github.com/mxyns/go-tcp/blob/master/example/demo.go)
+example took from [demo](https://github.com/mxyns/go-tcp/tree/master/examples/demo/main.go)
 ```go
 waitForSomething := sync.WaitGroup{}
 waitForSomething.Add(1)
