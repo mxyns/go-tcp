@@ -40,6 +40,6 @@ func (c *Client) Close() {
 }
 func (c *Client) Send(request requests.Request) *requests.Request {
 
-	response, _, _ := SendRequestOn(c.Socket, &request)
+	response, _, _ := requests.SendRequestOn(c.Socket, &request)
 	return response
 }

@@ -58,7 +58,7 @@ func (s *Server) handleClient(socket *net.Conn) {
 
 	for {
 
-		received, err, err_id := Await(socket)
+		received, err, err_id := requests.Await(socket)
 
 		if err == nil {
 			fmt.Printf("Deserialized a [%v] Request\n", (*received).Name())

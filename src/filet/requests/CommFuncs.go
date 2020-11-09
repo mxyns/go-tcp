@@ -1,8 +1,7 @@
-package filet
+package requests
 
 import (
 	"encoding/binary"
-	"filet/requests"
 	"fmt"
 	"io"
 	"net"
@@ -19,29 +18,35 @@ const (
       [255; 512] => io error (see consts)
 */
 
-func SendRequestOn(conn *net.Conn, request *requests.Request) (req *requests.Request, err error, err_id uint16) {
-
-	fmt.Printf("Sending Request [%v]\n", (*request).Name())
-
-	fmt.Printf("Id : %v\n", (*request).Info().Id)
+func WriteHeaderTo(conn *net.Conn, request *Request) (err error, err_id uint16) {
 
 	n, err := (*conn).Write([]byte{(*request).Info().Id})
 	if n != 1 || err != nil {
 		fmt.Printf("Error while sending Id : %v\n", err)
-		return nil, err, CONN_WRITE_ERROR
+		return err, CONN_WRITE_ERROR
 	}
 
 	err = binary.Write(*conn, binary.BigEndian, (*request).Info().WantsResponse)
 	if err != nil {
 		fmt.Printf("Error while sending NeedsReponse : %v\n", err)
-		return nil, err, CONN_WRITE_ERROR
+		return err, CONN_WRITE_ERROR
 	}
 
 	err = binary.Write(*conn, binary.BigEndian, (*request).DataSize())
 	if err != nil {
 		fmt.Printf("Error while sending DataSize : %v\n", err)
-		return nil, err, CONN_WRITE_ERROR
+		return err, CONN_WRITE_ERROR
 	}
+
+	return nil, 0
+}
+
+func SendRequestOn(conn *net.Conn, request *Request) (req *Request, err error, err_id uint16) {
+
+	fmt.Printf("Sending Request [%v]\n", (*request).Name())
+	fmt.Printf("Id : %v\n", (*request).Info().Id)
+
+	err, err_id = WriteHeaderTo(conn, request)
 
 	err = (*request).SerializeTo(conn)
 	if err != nil {
@@ -50,13 +55,13 @@ func SendRequestOn(conn *net.Conn, request *requests.Request) (req *requests.Req
 	}
 
 	if (*request).Info().WantsResponse {
-		req, err, err_id := Await(conn)
+		req, err, err_id = Await(conn)
 		return req, err, err_id
 	}
 
 	return nil, nil, 0
 }
-func Await(socket *net.Conn) (req *requests.Request, err error, err_id uint16) {
+func Await(socket *net.Conn) (req *Request, err error, err_id uint16) {
 
 	twoByteBuff := make([]byte, 2)
 
@@ -72,7 +77,7 @@ func Await(socket *net.Conn) (req *requests.Request, err error, err_id uint16) {
 	fmt.Printf("Read %v bytes for Id=%v, wantsResponse=%v\n", n, id, wantsResponse)
 	fmt.Printf("Received Request[%v] from %v\n", id, (*socket).RemoteAddr())
 
-	received := (&requests.RequestInfo{Id: id, WantsResponse: wantsResponse}).BuildFrom(socket)
+	received := (&RequestInfo{Id: id, WantsResponse: wantsResponse}).BuildFrom(socket)
 	if received == nil {
 		return nil, fmt.Errorf("unknown Id"), uint16(id)
 	}

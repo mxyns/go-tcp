@@ -8,27 +8,27 @@ import (
 	"net"
 )
 
-type textRequest struct {
+type TextRequest struct {
 	info *requests.RequestInfo
 	text string
 }
 
 func init() {
-	requests.RegisterRequestType(1, func(reqInfo *requests.RequestInfo) requests.Request { return &textRequest{info: reqInfo} })
+	requests.RegisterRequestType(1, func(reqInfo *requests.RequestInfo) requests.Request { return &TextRequest{info: reqInfo} })
 }
 
-func MakeTextRequest(text string) *textRequest {
-	return &textRequest{
+func MakeTextRequest(text string) *TextRequest {
+	return &TextRequest{
 		info: &requests.RequestInfo{Id: 1, WantsResponse: false},
 		text: text,
 	}
 }
 
-func (tr *textRequest) Name() string                { return "Text" }
-func (tr *textRequest) Info() *requests.RequestInfo { return tr.info }
-func (tr *textRequest) DataSize() uint32            { return uint32(len([]byte(tr.text))) }
+func (tr *TextRequest) Name() string                { return "Text" }
+func (tr *TextRequest) Info() *requests.RequestInfo { return tr.info }
+func (tr *TextRequest) DataSize() uint32            { return uint32(len([]byte(tr.text))) }
 
-func (tr *textRequest) SerializeTo(conn *net.Conn) error {
+func (tr *TextRequest) SerializeTo(conn *net.Conn) error {
 
 	data := []byte(tr.text)
 	n, err := (*conn).Write(data)
@@ -38,7 +38,7 @@ func (tr *textRequest) SerializeTo(conn *net.Conn) error {
 
 	return nil
 }
-func (tr *textRequest) DeserializeFrom(conn *net.Conn) (requests.Request, error) {
+func (tr *TextRequest) DeserializeFrom(conn *net.Conn) (requests.Request, error) {
 
 	length := make([]byte, 32/8)
 	_, err := (*conn).Read(length)
@@ -57,7 +57,11 @@ func (tr *textRequest) DeserializeFrom(conn *net.Conn) (requests.Request, error)
 	return tr, err
 }
 
-func (tr *textRequest) GetResult() requests.Request {
+func (tr *TextRequest) GetResult() requests.Request {
 
 	return nil
+}
+
+func (tr *TextRequest) GetText() string {
+	return tr.text
 }

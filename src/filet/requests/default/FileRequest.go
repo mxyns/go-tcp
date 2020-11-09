@@ -10,41 +10,44 @@ import (
 	"strings"
 )
 
-type fileRequest struct {
+type FileRequest struct {
 	info          *requests.RequestInfo
-	in_path       string
-	out_path      string
+	path          string // path of file (input path if on sender's side, output path on receiver's side)
+	filesize      uint32
 	wantsResponse bool
 }
 
 func init() {
 
-	requests.RegisterRequestType(2, func(reqInfo *requests.RequestInfo) requests.Request { return &fileRequest{info: reqInfo} })
+	requests.RegisterRequestType(2, func(reqInfo *requests.RequestInfo) requests.Request { return &FileRequest{info: reqInfo} })
 }
 
-func MakeFileRequest(in string, wantsResponse bool) *fileRequest {
+func MakeFileRequest(in string, wantsResponse bool) *FileRequest {
 
-	return &fileRequest{
-		info:    &requests.RequestInfo{Id: 2, WantsResponse: wantsResponse},
-		in_path: in,
+	fileRequest := &FileRequest{
+		info: &requests.RequestInfo{Id: 2, WantsResponse: wantsResponse},
+		path: in,
 	}
+	fileRequest.filesize = fileRequest.DataSize()
+
+	return fileRequest
 }
 
-func (fr *fileRequest) Name() string                { return "File" }
-func (fr *fileRequest) Info() *requests.RequestInfo { return fr.info }
-func (fr *fileRequest) DataSize() uint32 {
-	stat, err := os.Stat(fr.in_path)
+func (fr *FileRequest) Name() string                { return "File" }
+func (fr *FileRequest) Info() *requests.RequestInfo { return fr.info }
+func (fr *FileRequest) DataSize() uint32 {
+	stat, err := os.Stat(fr.path)
 	if err != nil || stat.IsDir() || stat.Size() > 1<<32-1 {
-		fmt.Printf("Error while evaluating file %v's size : %v\n", fr.in_path, err)
+		fmt.Printf("Error while evaluating file %v's size : %v\n", fr.path, err)
 		return 0
 	}
 
 	return uint32(stat.Size())
 }
 
-func (fr *fileRequest) SerializeTo(conn *net.Conn) error {
+func (fr *FileRequest) SerializeTo(conn *net.Conn) error {
 
-	_, err := fio.StreamFromFile(conn, fr.in_path)
+	_, err := fio.StreamFromFile(conn, fr.path)
 	if err != nil {
 		// FIXME fill the gap with zeros ?
 		return err
@@ -52,25 +55,33 @@ func (fr *fileRequest) SerializeTo(conn *net.Conn) error {
 
 	return err
 }
-func (fr *fileRequest) DeserializeFrom(conn *net.Conn) (requests.Request, error) {
+func (fr *FileRequest) DeserializeFrom(conn *net.Conn) (requests.Request, error) {
 
 	length := make([]byte, 32/8)
 	_, _ = (*conn).Read(length)
 	data_length := binary.BigEndian.Uint32(length)
-	name, read, err := fio.WriteStreamToFile(conn, "dl", data_length)
+	name, wrote, err := fio.WriteStreamToFile(conn, "dl", data_length)
 
 	if err != nil {
 		return nil, err
 	}
 
-	fr.out_path = name
-	fmt.Printf("File received, %v bytes saved to %v.\n", read, fr.out_path)
+	fr.path = name
+	fr.filesize = wrote
+	fmt.Printf("File received, %v bytes saved to %v.\n", wrote, fr.path)
 	return fr, nil
 }
 
-func (fr *fileRequest) GetResult() requests.Request {
+func (fr *FileRequest) GetResult() requests.Request {
 
-	shards := strings.Split(fr.out_path, "/")
+	shards := strings.Split(fr.path, "/")
 
 	return MakeTextRequest(shards[len(shards)-1])
+}
+
+func (fr *FileRequest) GetPath() string {
+	return fr.path
+}
+func (fr *FileRequest) GetFileSize() uint32 {
+	return fr.filesize
 }

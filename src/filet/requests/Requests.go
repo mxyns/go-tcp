@@ -18,9 +18,10 @@ var requestRegister = make(map[byte]func(*RequestInfo) Request)
 
 func init() {
 
-	requestRegister[0] = nil // Réservé
+	requestRegister[0] = func(packInfo *RequestInfo) Request { return &Pack{packedInfo: packInfo} } // Réservé
 }
 
+// Element, Primitive, Shard, Extract,
 type Request interface {
 	SerializeTo(conn *net.Conn) error
 	DeserializeFrom(conn *net.Conn) (Request, error)
