@@ -37,11 +37,12 @@ func main() {
 			ConnectionWaiter: &openedConnections,
 			RequestHandler: func(client *net.Conn, received *requests.Request) {
 
-				fmt.Printf("Received packet %v\n", (*received).Info().Id)
+				printRequest(received, fmt.Sprintf("%v ==> ", (*client).RemoteAddr()))
 
 				if (*received).Info().WantsResponse {
 					response := (*received).GetResult()
-					_, _, _ = filet.SendRequestOn(client, &response)
+					_, _, _ = requests.SendRequestOn(client, &response)
+					printRequest(&response, fmt.Sprintf("%v <== ", (*client).RemoteAddr()))
 				}
 			},
 		}
@@ -66,9 +67,14 @@ func main() {
 		defer client.Close()
 
 		client.Send(defaultRequests.MakeTextRequest("test123 test 1 2 1 2 test 1 2 3"))
-		client.Send(defaultRequests.MakeFileRequest("./examples/res/test.txt", false))
+		client.Send(defaultRequests.MakeFileRequest("./examples/demo/res/test.txt", false))
 		client.Send(defaultRequests.MakeTextRequest("à Kadoc"))
-		client.Send(defaultRequests.MakeFileRequest("./examples/res/jc.jpg", true))
+		client.Send(requests.MakePack(
+			defaultRequests.MakeTextRequest("Un peu de texte avec deux pièces-jointes (à deux doigts d'inventer le mail)"),
+			defaultRequests.MakeFileRequest("./examples/demo/res/test.txt", true),
+			defaultRequests.MakeFileRequest("./examples/demo/res/test.txt", true),
+		))
+		client.Send(defaultRequests.MakeFileRequest("./examples/demo/res/jc.jpg", true))
 		client.Send(defaultRequests.MakeTextRequest("en garde ma mignonne"))
 	}
 
@@ -90,5 +96,27 @@ func terminalInput(server *filet.Server, group *sync.WaitGroup) {
 			group.Done()
 			break
 		}
+	}
+}
+
+func printRequest(request *requests.Request, prefix string) {
+	if request == nil {
+		return
+	} // when pack results are nil
+
+	switch (*request).(type) {
+	case *requests.Pack: // pack
+		pack := (*request).(*requests.Pack)
+		fmt.Printf("%vPack of %v requests : %v\n", prefix, pack.GetCount(), pack.GetRequests())
+		for i := range pack.GetRequests() {
+			printRequest(pack.GetRequests()[i], fmt.Sprintf("    %v. ", i))
+		}
+
+	case *defaultRequests.TextRequest: // textRequest
+		fmt.Printf("%v%v\n", prefix, (*request).(*defaultRequests.TextRequest).GetText())
+	case *defaultRequests.FileRequest: // fileRequest
+		fmt.Printf("%vFile : path=%v, size=%v\n", prefix, (*request).(*defaultRequests.FileRequest).GetPath(), (*request).(*defaultRequests.FileRequest).GetFileSize())
+	default:
+		fmt.Printf("%vReceived packet %v\n", prefix, (*request).Info().Id)
 	}
 }
