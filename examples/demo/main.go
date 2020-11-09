@@ -69,7 +69,7 @@ func main() {
 		client.Send(defaultRequests.MakeTextRequest("test123 test 1 2 1 2 test 1 2 3"))
 		client.Send(defaultRequests.MakeFileRequest("./examples/demo/res/test.txt", false))
 		client.Send(defaultRequests.MakeTextRequest("à Kadoc"))
-		client.Send(requests.MakePack(
+		client.Send(requests.MakePack(1,
 			defaultRequests.MakeTextRequest("Un peu de texte avec deux pièces-jointes (à deux doigts d'inventer le mail)"),
 			defaultRequests.MakeFileRequest("./examples/demo/res/test.txt", true),
 			defaultRequests.MakeFileRequest("./examples/demo/res/test.txt", true),
@@ -107,7 +107,7 @@ func printRequest(request *requests.Request, prefix string) {
 	switch (*request).(type) {
 	case *requests.Pack: // pack
 		pack := (*request).(*requests.Pack)
-		fmt.Printf("%vPack of %v requests : %v\n", prefix, pack.GetCount(), pack.GetRequests())
+		fmt.Printf("%vPack (reply=%v) sub %v contains %v requests : %v\n", pack.IsReply, prefix, pack.SubId, pack.GetCount(), pack.GetRequests())
 		for i := range pack.GetRequests() {
 			printRequest(pack.GetRequests()[i], fmt.Sprintf("    %v. ", i))
 		}
