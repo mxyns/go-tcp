@@ -72,6 +72,7 @@ func main() {
 		client.Send(requests.MakePack(1,
 			defaultRequests.MakeTextRequest("Un peu de texte avec deux pièces-jointes (à deux doigts d'inventer le mail)"),
 			defaultRequests.MakeFileRequest("./examples/demo/res/test.txt", true),
+			defaultRequests.MakeTextRequest("Un peu de texte avec deux pièces-jointes (à deux doigts d'inventer le mail)"),
 			defaultRequests.MakeFileRequest("./examples/demo/res/test.txt", true),
 		))
 		client.Send(defaultRequests.MakeFileRequest("./examples/demo/res/jc.jpg", true))

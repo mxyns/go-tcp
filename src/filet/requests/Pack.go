@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	halfUInt32 = math.MaxUint32 / 2
+	HalfUInt32 = math.MaxUint32 / 2
 )
 
 type Pack struct {
@@ -94,9 +94,10 @@ func (p *Pack) DeserializeFrom(conn *net.Conn) (Request, error) {
 		return p, err
 	}
 	p.SubId = binary.BigEndian.Uint32(subId)
-	p.IsReply = p.SubId > halfUInt32
+
+	p.IsReply = p.SubId > HalfUInt32
 	if p.IsReply {
-		p.SubId -= halfUInt32 + 1
+		p.SubId -= HalfUInt32 + 1
 	}
 
 	// capture the following p.dataCount requests and put them in Pack
@@ -124,12 +125,12 @@ func (p *Pack) GetResult() Request {
 		result := (*p.requests[i]).GetResult()
 		if result == nil {
 			result = MakeGenericPack()
-			result.(*Pack).SubId = halfUInt32 + 1
+			result.(*Pack).SubId = HalfUInt32 + 1
 		}
 		results[i] = result
 	}
 
-	return MakePack(1+halfUInt32+p.SubId, results...)
+	return MakePack(1+HalfUInt32+p.SubId, results...)
 }
 
 func (p *Pack) GetCount() uint32 {

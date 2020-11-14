@@ -20,8 +20,8 @@ const (
 
 func WriteHeaderTo(conn *net.Conn, request *Request) (err error, err_id uint16) {
 
-	n, err := (*conn).Write([]byte{(*request).Info().Id})
-	if n != 1 || err != nil {
+	err = binary.Write(*conn, binary.BigEndian, (*request).Info().Id)
+	if err != nil {
 		fmt.Printf("Error while sending Id : %v\n", err)
 		return err, CONN_WRITE_ERROR
 	}
@@ -51,7 +51,7 @@ func SendRequestOn(conn *net.Conn, request *Request) (req *Request, err error, e
 	err = (*request).SerializeTo(conn)
 	if err != nil {
 		fmt.Printf("Error while serializing request : %v", err)
-		return nil, err, CONN_READ_ERROR
+		return nil, err, CONN_WRITE_ERROR
 	}
 
 	if (*request).Info().WantsResponse {

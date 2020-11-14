@@ -10,6 +10,10 @@ import (
 	"strings"
 )
 
+const (
+	folderName = "dl"
+)
+
 type FileRequest struct {
 	info          *requests.RequestInfo
 	path          string // path of file (input path if on sender's side, output path on receiver's side)
@@ -20,6 +24,9 @@ type FileRequest struct {
 func init() {
 
 	requests.RegisterRequestType(2, func(reqInfo *requests.RequestInfo) requests.Request { return &FileRequest{info: reqInfo} })
+	if _, err := os.Stat(folderName); os.IsNotExist(err) {
+		_ = os.MkdirAll(folderName, os.ModeDir)
+	}
 }
 
 func MakeFileRequest(in string, wantsResponse bool) *FileRequest {
@@ -47,11 +54,12 @@ func (fr *FileRequest) DataSize() uint32 {
 
 func (fr *FileRequest) SerializeTo(conn *net.Conn) error {
 
-	_, err := fio.StreamFromFile(conn, fr.path)
+	n, err := fio.StreamFromFile(conn, fr.path)
 	if err != nil {
 		// FIXME fill the gap with zeros ?
 		return err
 	}
+	fmt.Printf("[SerializeTo][StreamFromFile] sent=%v size=%v", n, fr.DataSize())
 
 	return err
 }
@@ -60,7 +68,7 @@ func (fr *FileRequest) DeserializeFrom(conn *net.Conn) (requests.Request, error)
 	length := make([]byte, 32/8)
 	_, _ = (*conn).Read(length)
 	data_length := binary.BigEndian.Uint32(length)
-	name, wrote, err := fio.WriteStreamToFile(conn, "dl", data_length)
+	name, wrote, err := fio.WriteStreamToFile(conn, folderName, data_length)
 
 	if err != nil {
 		return nil, err
