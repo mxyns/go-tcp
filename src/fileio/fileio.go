@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"math/rand"
 	"net"
 	"os"
 	"strconv"
@@ -24,7 +25,9 @@ func ClearDir(path string) {
 func StreamFromFile(conn *net.Conn, file_path string) (uint32, error) {
 
 	f, err := os.Open(file_path)
-	if err != nil { return 0, err }
+	if err != nil {
+		return 0, err
+	}
 	r := bufio.NewReader(f)
 	b := make([]byte, MAX_FILE_READ_BUFFER_SIZE)
 
@@ -51,13 +54,9 @@ func StreamFromFile(conn *net.Conn, file_path string) (uint32, error) {
 func WriteStreamToFile(conn *net.Conn, folder string, data_length uint32) (string, uint32, error) {
 
 	var buffer []byte
-	if data_length < MAX_FILE_READ_BUFFER_SIZE {
-		buffer = make([]byte, data_length)
-	} else {
-		buffer = make([]byte, MAX_FILE_READ_BUFFER_SIZE)
-	}
+	buffer = make([]byte, MAX_FILE_READ_BUFFER_SIZE)
 
-	f, err := os.Create("./" + folder + "/" + strconv.Itoa(time.Now().Nanosecond()))
+	f, err := os.Create("./" + folder + "/" + strconv.Itoa(time.Now().Nanosecond()+rand.Int()))
 	if err != nil {
 		fmt.Printf("Couldn't create file. Aborting.%v\n", err)
 		defer fmt.Printf("Closing connection to Client : %v\n", (*conn).Close())
@@ -69,6 +68,10 @@ func WriteStreamToFile(conn *net.Conn, folder string, data_length uint32) (strin
 
 	read := uint32(0)
 	for {
+		if left := data_length - read; left < MAX_FILE_READ_BUFFER_SIZE {
+			buffer = make([]byte, left)
+		}
+
 		n_read, err := (*conn).Read(buffer)
 		if err != nil {
 			fmt.Printf("Stopped reading : %v\n", err)
@@ -76,13 +79,14 @@ func WriteStreamToFile(conn *net.Conn, folder string, data_length uint32) (strin
 		} else {
 			fmt.Printf("%v bytes out of %v buffer capacity\n", n_read, len(buffer))
 		}
-		n_saved, err := writer.Write(buffer[:n_read])
+		n_saved, err := writer.Write(buffer[0:n_read])
 		writer.Flush()
+
 		if err != nil || n_saved != n_read {
 			fmt.Printf("Didn't save all info I read %v != %v : %v\n%", n_read, n_saved, err)
 			break
 		}
-			fmt.Printf("%v written \n", n_saved)
+		fmt.Printf("%v written \n", n_saved)
 
 		if read += uint32(n_saved); read >= data_length {
 			return f.Name(), read, nil

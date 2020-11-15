@@ -1,5 +1,6 @@
 package filet
 
+// TODO make all import path relative so that it can be imported from github using go -get without having to move the library to a different folder
 import (
 	"filet/requests"
 	"fmt"

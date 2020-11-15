@@ -54,12 +54,11 @@ func (fr *FileRequest) DataSize() uint32 {
 
 func (fr *FileRequest) SerializeTo(conn *net.Conn) error {
 
-	n, err := fio.StreamFromFile(conn, fr.path)
+	_, err := fio.StreamFromFile(conn, fr.path)
 	if err != nil {
-		// FIXME fill the gap with zeros ?
+		// TODO fill the gap with zeros ?
 		return err
 	}
-	fmt.Printf("[SerializeTo][StreamFromFile] sent=%v size=%v", n, fr.DataSize())
 
 	return err
 }
