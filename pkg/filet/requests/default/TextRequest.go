@@ -3,8 +3,8 @@ package _default
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/mxyns/go-tcp/filet/requests"
 	"io"
-	"mxyns/go-tcp/filet/requests"
 	"net"
 )
 

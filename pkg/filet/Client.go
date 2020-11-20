@@ -2,7 +2,7 @@ package filet
 
 import (
 	"fmt"
-	"mxyns/go-tcp/filet/requests"
+	"github.com/mxyns/go-tcp/filet/requests"
 	"net"
 	"time"
 )

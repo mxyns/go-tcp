@@ -1,3 +1,3 @@
-module mxyns/go-tcp
+module github.com/mxyns/go-tcp
 
 go 1.15
