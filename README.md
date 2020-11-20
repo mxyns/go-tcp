@@ -14,7 +14,7 @@ launch arguments :
 import (
     fil "github.com/mxyns/go-tcp/src/filet" // [compulsory] main package (Client, Server, Address, Communication functions)
     req "github.com/mxyns/go-tcp/src/filet/requests" // [compulsory] request support 
-    defReq "github.com/mxyns/go-tcp/src/filet/requests/default" // [optional] some default requests 
+    defReq "github.com/mxyns/go-tcp/src/filet/requests/defaultRequests" // [optional] some defaultRequests requests 
 )
 ```
 
@@ -70,8 +70,8 @@ if err != nil { // Check if the Client connected correctly
 }
 defer client.Close() // Close Client when finished
 
-client.Send(defaultRequests.MakeTextRequest("Connected !")) // Send text using default request from filet/requests/default package
-client.Send(defaultRequests.MakeFileRequest("./path/to/file.ext")) // Send file using default request from filet/requests/default package
+client.Send(defaultRequests.MakeTextRequest("Connected !")) // Send text using defaultRequests request from filet/requests/defaultRequests package
+client.Send(defaultRequests.MakeFileRequest("./path/to/file.ext")) // Send file using defaultRequests request from filet/requests/defaultRequests package
 
 waitForSomething.Wait()
 ```

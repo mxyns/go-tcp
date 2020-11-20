@@ -28,7 +28,7 @@ type Pack struct {
 	IsReply bool
 }
 
-// No need to register, it's registered by default using previously Reserved Id 0
+// No need to register, it's registered by defaultRequests using previously Reserved Id 0
 
 func MakeGenericPack(requests ...Request) *Pack {
 	return MakePack(0, requests...)
