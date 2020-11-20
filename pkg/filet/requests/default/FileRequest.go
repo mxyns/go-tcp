@@ -2,9 +2,9 @@ package _default
 
 import (
 	"encoding/binary"
-	fio "fileio"
-	"filet/requests"
 	"fmt"
+	fio "mxyns/go-tcp/fileio"
+	"mxyns/go-tcp/filet/requests"
 	"net"
 	"os"
 	"strings"

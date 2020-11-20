@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const MAX_FILE_READ_BUFFER_SIZE = 8192
+const MAX_FILE_BUFFER_SIZE = 8192
 
 func ClearDir(path string) {
 
@@ -29,7 +29,7 @@ func StreamFromFile(conn *net.Conn, file_path string) (uint32, error) {
 		return 0, err
 	}
 	r := bufio.NewReader(f)
-	b := make([]byte, MAX_FILE_READ_BUFFER_SIZE)
+	b := make([]byte, MAX_FILE_BUFFER_SIZE)
 
 	sum := uint32(0)
 	for {
@@ -54,7 +54,7 @@ func StreamFromFile(conn *net.Conn, file_path string) (uint32, error) {
 func WriteStreamToFile(conn *net.Conn, folder string, data_length uint32) (string, uint32, error) {
 
 	var buffer []byte
-	buffer = make([]byte, MAX_FILE_READ_BUFFER_SIZE)
+	buffer = make([]byte, MAX_FILE_BUFFER_SIZE)
 
 	f, err := os.Create("./" + folder + "/" + strconv.Itoa(time.Now().Nanosecond()+rand.Int()))
 	if err != nil {
@@ -68,7 +68,7 @@ func WriteStreamToFile(conn *net.Conn, folder string, data_length uint32) (strin
 
 	read := uint32(0)
 	for {
-		if left := data_length - read; left < MAX_FILE_READ_BUFFER_SIZE {
+		if left := data_length - read; left < MAX_FILE_BUFFER_SIZE {
 			buffer = make([]byte, left)
 		}
 

@@ -1,8 +1,8 @@
 package filet
 
 import (
-	"filet/requests"
 	"fmt"
+	"mxyns/go-tcp/filet/requests"
 	"net"
 	"time"
 )
