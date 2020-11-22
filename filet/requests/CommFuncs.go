@@ -22,19 +22,25 @@ func WriteHeaderTo(conn *net.Conn, request *Request) (err error, err_id uint16) 
 
 	err = binary.Write(*conn, binary.BigEndian, (*request).Info().Id)
 	if err != nil {
-		log.Error("Error while sending Id : %v\n", err)
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error("Error while sending Id")
 		return err, CONN_WRITE_ERROR
 	}
 
 	err = binary.Write(*conn, binary.BigEndian, (*request).Info().WantsResponse)
 	if err != nil {
-		log.Error("Error while sending NeedsReponse : %v\n", err)
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error("Error while sending NeedsReponse")
 		return err, CONN_WRITE_ERROR
 	}
 
 	err = binary.Write(*conn, binary.BigEndian, (*request).DataSize())
 	if err != nil {
-		log.Error("Error while sending DataSize : %v\n", err)
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error("Error while sending DataSize")
 		return err, CONN_WRITE_ERROR
 	}
 
@@ -43,14 +49,18 @@ func WriteHeaderTo(conn *net.Conn, request *Request) (err error, err_id uint16) 
 
 func SendRequestOn(conn *net.Conn, request *Request) (req *Request, err error, err_id uint16) {
 
-	log.Debug("Sending Request [%v]\n", (*request).Name())
-	log.Debug("Id : %v\n", (*request).Info().Id)
+	log.WithFields(log.Fields{
+		"name": (*request).Name(),
+		"id":   (*request).Info().Id,
+	}).Debug("Sending request")
 
 	err, err_id = WriteHeaderTo(conn, request)
 
 	err = (*request).SerializeTo(conn)
 	if err != nil {
-		log.Error("Error while serializing request : %v", err)
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error("Error while serializing request")
 		return nil, err, CONN_WRITE_ERROR
 	}
 
@@ -74,8 +84,15 @@ func Await(socket *net.Conn) (req *Request, err error, err_id uint16) {
 
 	wantsResponse := twoByteBuff[1] == 1
 
-	log.Info("Read %v bytes for Id=%v, wantsResponse=%v\n", n, id, wantsResponse)
-	log.Debug("Received Request[%v] from %v\n", id, (*socket).RemoteAddr())
+	log.WithFields(log.Fields{
+		"byteCount":     n,
+		"id":            id,
+		"wantsResponse": wantsResponse,
+	}).Info("Read header")
+	log.WithFields(log.Fields{
+		"id":      id,
+		"address": (*socket).RemoteAddr(),
+	}).Debug("Received request client")
 
 	received := (&RequestInfo{Id: id, WantsResponse: wantsResponse}).BuildFrom(socket)
 	if received == nil {

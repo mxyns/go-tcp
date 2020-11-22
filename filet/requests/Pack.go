@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	HalfUInt32 = math.MaxUint32 / 2
+	MAX_PACK_SUBID = math.MaxUint32 / 2
+	PACK_ID        = 0
 )
 
 type Pack struct {
@@ -28,10 +29,10 @@ type Pack struct {
 	IsReply bool
 }
 
-// No need to register, it's registered by defaultRequests using previously Reserved Id 0
+// No need to register, it's registered by defaultRequests using (previously reserved) Id 0
 
 func MakeGenericPack(requests ...Request) *Pack {
-	return MakePack(0, requests...)
+	return MakePack(PACK_ID, requests...)
 }
 func MakePack(subId uint32, requests ...Request) *Pack {
 
@@ -45,7 +46,7 @@ func MakePack(subId uint32, requests ...Request) *Pack {
 	return &Pack{
 		SubId: subId,
 		packedInfo: &RequestInfo{
-			Id:            0,
+			Id:            PACK_ID,
 			WantsResponse: packResponse,
 		},
 		dataCount: uint32(len(requests)),
@@ -57,7 +58,9 @@ func (p *Pack) SerializeTo(conn *net.Conn) error {
 
 	err := binary.Write(*conn, binary.BigEndian, p.SubId)
 	if err != nil {
-		log.Error("Error while sending SubId : %v\n", err)
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error("Error while sending SubId")
 		return err
 	}
 
@@ -95,13 +98,17 @@ func (p *Pack) DeserializeFrom(conn *net.Conn) (Request, error) {
 	}
 	p.SubId = binary.BigEndian.Uint32(subId)
 
-	p.IsReply = p.SubId > HalfUInt32
+	p.IsReply = p.SubId > MAX_PACK_SUBID
 	if p.IsReply {
-		p.SubId -= HalfUInt32 + 1
+		p.SubId -= MAX_PACK_SUBID + 1
 	}
 
 	// capture the following p.dataCount requests and put them in Pack
-	log.Info("Receiving (reply=%v) pack sub %v of %v Requests\n", p.IsReply, p.SubId, p.dataCount)
+	log.WithFields(log.Fields{
+		"subId": p.SubId,
+		"count": p.dataCount,
+		"reply": p.IsReply,
+	}).Info("Receiving pack requests")
 	p.requests = make([]*Request, p.dataCount)
 	for i := range p.requests {
 		req, err, _ := Await(conn)
@@ -125,12 +132,12 @@ func (p *Pack) GetResult() Request {
 		result := (*p.requests[i]).GetResult()
 		if result == nil {
 			result = MakeGenericPack()
-			result.(*Pack).SubId = HalfUInt32 + 1
+			result.(*Pack).SubId = MAX_PACK_SUBID + 1
 		}
 		results[i] = result
 	}
 
-	return MakePack(1+HalfUInt32+p.SubId, results...)
+	return MakePack(1+MAX_PACK_SUBID+p.SubId, results...)
 }
 
 func (p *Pack) GetCount() uint32 {

@@ -14,7 +14,10 @@ type Client struct {
 
 func (c *Client) Start(timeout string) (*Client, error) {
 
-	log.Debug("Trying to connect to %v://%v...\n", c.Proto, c.Address.ToString())
+	log.WithFields(log.Fields{
+		"protocol": c.Proto,
+		"address":  c.Address.ToString(),
+	}).Debug("Trying to connect to server.")
 	timeout_duration, err := time.ParseDuration(timeout)
 	socket, err := net.DialTimeout(c.Proto, c.Address.ToString(), timeout_duration)
 	if err != nil {
@@ -35,7 +38,9 @@ func (c *Client) Close() {
 
 	err := (*c.Socket).Close()
 	if err != nil {
-		log.Error("Closed Client socket, caused : %v", err)
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error("Client socket closed")
 	}
 }
 func (c *Client) Send(request requests.Request) *requests.Request {

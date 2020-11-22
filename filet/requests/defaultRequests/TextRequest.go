@@ -8,18 +8,22 @@ import (
 	"net"
 )
 
+const (
+	TEXT_REQUEST_ID = 1
+)
+
 type TextRequest struct {
 	info *requests.RequestInfo
 	text string
 }
 
 func init() {
-	requests.RegisterRequestType(1, func(reqInfo *requests.RequestInfo) requests.Request { return &TextRequest{info: reqInfo} })
+	requests.RegisterRequestType(TEXT_REQUEST_ID, func(reqInfo *requests.RequestInfo) requests.Request { return &TextRequest{info: reqInfo} })
 }
 
 func MakeTextRequest(text string) *TextRequest {
 	return &TextRequest{
-		info: &requests.RequestInfo{Id: 1, WantsResponse: false},
+		info: &requests.RequestInfo{Id: TEXT_REQUEST_ID, WantsResponse: false},
 		text: text,
 	}
 }
@@ -40,7 +44,7 @@ func (tr *TextRequest) SerializeTo(conn *net.Conn) error {
 }
 func (tr *TextRequest) DeserializeFrom(conn *net.Conn) (requests.Request, error) {
 
-	length := make([]byte, 32/8)
+	length := make([]byte, requests.LENGTH_SIZE)
 	_, err := (*conn).Read(length)
 	if err != nil {
 		return tr, err

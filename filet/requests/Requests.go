@@ -14,6 +14,10 @@ import (
 			=> length (image) => read => apply => send result
 */
 
+const (
+	LENGTH_SIZE = 32 / 8
+)
+
 var requestRegister = make(map[byte]func(*RequestInfo) Request)
 
 func init() {
@@ -42,7 +46,9 @@ func (req *RequestInfo) BuildFrom(conn *net.Conn) Request {
 
 		received, err := requestRegister[req.Id](req).DeserializeFrom(conn)
 		if err != nil {
-			log.Error("Error while deserializing request. Stopping. %v", err)
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("Error while deserializing request. Stopping")
 			(*conn).Close()
 			return nil
 		}
@@ -57,7 +63,10 @@ func RegisterRequestType(id byte, generator func(reqInfo *RequestInfo) Request) 
 	tyqe := generator(&RequestInfo{Id: 0}).Name()
 
 	if requestRegister[id] == nil {
-		log.Info("Registered %v as Id=%v\n", tyqe, id)
+		log.WithFields(log.Fields{
+			"type": tyqe,
+			"id":   id,
+		}).Info("Registered request")
 		requestRegister[id] = generator
 	} else {
 		used_type := requestRegister[id](&RequestInfo{Id: 0}).Name()

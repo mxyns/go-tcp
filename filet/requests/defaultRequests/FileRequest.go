@@ -5,13 +5,15 @@ import (
 	fio "github.com/mxyns/go-tcp/fileio"
 	"github.com/mxyns/go-tcp/filet/requests"
 	log "github.com/sirupsen/logrus"
+	"math"
 	"net"
 	"os"
 	"strings"
 )
 
 const (
-	folderName = "dl"
+	TARGET_DIRECTORY = "dl"
+	FILE_REQUEST_ID  = 2
 )
 
 type FileRequest struct {
@@ -23,16 +25,16 @@ type FileRequest struct {
 
 func init() {
 
-	requests.RegisterRequestType(2, func(reqInfo *requests.RequestInfo) requests.Request { return &FileRequest{info: reqInfo} })
-	if _, err := os.Stat(folderName); os.IsNotExist(err) {
-		_ = os.MkdirAll(folderName, os.ModeDir)
+	requests.RegisterRequestType(FILE_REQUEST_ID, func(reqInfo *requests.RequestInfo) requests.Request { return &FileRequest{info: reqInfo} })
+	if _, err := os.Stat(TARGET_DIRECTORY); os.IsNotExist(err) {
+		_ = os.MkdirAll(TARGET_DIRECTORY, os.ModeDir)
 	}
 }
 
 func MakeFileRequest(in string, wantsResponse bool) *FileRequest {
 
 	fileRequest := &FileRequest{
-		info: &requests.RequestInfo{Id: 2, WantsResponse: wantsResponse},
+		info: &requests.RequestInfo{Id: FILE_REQUEST_ID, WantsResponse: wantsResponse},
 		path: in,
 	}
 	fileRequest.filesize = fileRequest.DataSize()
@@ -44,8 +46,11 @@ func (fr *FileRequest) Name() string                { return "File" }
 func (fr *FileRequest) Info() *requests.RequestInfo { return fr.info }
 func (fr *FileRequest) DataSize() uint32 {
 	stat, err := os.Stat(fr.path)
-	if err != nil || stat.IsDir() || stat.Size() > 1<<32-1 {
-		log.Error("Error while evaluating file %v's size : %v\n", fr.path, err)
+	if err != nil || stat.IsDir() || stat.Size() > math.MaxUint32 {
+		log.WithFields(log.Fields{
+			"path":  fr.path,
+			"error": err,
+		}).Error("Error while evaluating file size")
 		return 0
 	}
 
@@ -64,10 +69,10 @@ func (fr *FileRequest) SerializeTo(conn *net.Conn) error {
 }
 func (fr *FileRequest) DeserializeFrom(conn *net.Conn) (requests.Request, error) {
 
-	length := make([]byte, 32/8)
+	length := make([]byte, requests.LENGTH_SIZE)
 	_, _ = (*conn).Read(length)
 	data_length := binary.BigEndian.Uint32(length)
-	name, wrote, err := fio.WriteStreamToFile(conn, folderName, data_length)
+	name, wrote, err := fio.WriteStreamToFile(conn, TARGET_DIRECTORY, data_length)
 
 	if err != nil {
 		return nil, err
@@ -75,7 +80,10 @@ func (fr *FileRequest) DeserializeFrom(conn *net.Conn) (requests.Request, error)
 
 	fr.path = name
 	fr.filesize = wrote
-	log.Info("File received, %v bytes saved to %v.\n", wrote, fr.path)
+	log.WithFields(log.Fields{
+		"path": fr.path,
+		"size": wrote,
+	}).Info("File received.")
 	return fr, nil
 }
 
