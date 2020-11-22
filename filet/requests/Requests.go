@@ -1,7 +1,7 @@
 package requests
 
 import (
-	"fmt"
+	log "github.com/sirupsen/logrus"
 	"net"
 )
 
@@ -42,7 +42,7 @@ func (req *RequestInfo) BuildFrom(conn *net.Conn) Request {
 
 		received, err := requestRegister[req.Id](req).DeserializeFrom(conn)
 		if err != nil {
-			fmt.Printf("Error while deserializing request. Stopping. %v", err)
+			log.Error("Error while deserializing request. Stopping. %v", err)
 			(*conn).Close()
 			return nil
 		}
@@ -57,7 +57,7 @@ func RegisterRequestType(id byte, generator func(reqInfo *RequestInfo) Request) 
 	tyqe := generator(&RequestInfo{Id: 0}).Name()
 
 	if requestRegister[id] == nil {
-		fmt.Printf("Registered %v as Id=%v\n", tyqe, id)
+		log.Info("Registered %v as Id=%v\n", tyqe, id)
 		requestRegister[id] = generator
 	} else {
 		used_type := requestRegister[id](&RequestInfo{Id: 0}).Name()

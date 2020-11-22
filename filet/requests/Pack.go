@@ -2,7 +2,7 @@ package requests
 
 import (
 	"encoding/binary"
-	"fmt"
+	log "github.com/sirupsen/logrus"
 	"math"
 	"net"
 )
@@ -57,7 +57,7 @@ func (p *Pack) SerializeTo(conn *net.Conn) error {
 
 	err := binary.Write(*conn, binary.BigEndian, p.SubId)
 	if err != nil {
-		fmt.Printf("Error while sending SubId : %v\n", err)
+		log.Error("Error while sending SubId : %v\n", err)
 		return err
 	}
 
@@ -101,7 +101,7 @@ func (p *Pack) DeserializeFrom(conn *net.Conn) (Request, error) {
 	}
 
 	// capture the following p.dataCount requests and put them in Pack
-	fmt.Printf("Receiving (reply=%v) pack sub %v of %v Requests\n", p.IsReply, p.SubId, p.dataCount)
+	log.Info("Receiving (reply=%v) pack sub %v of %v Requests\n", p.IsReply, p.SubId, p.dataCount)
 	p.requests = make([]*Request, p.dataCount)
 	for i := range p.requests {
 		req, err, _ := Await(conn)

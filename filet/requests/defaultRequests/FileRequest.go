@@ -2,9 +2,9 @@ package defaultRequests
 
 import (
 	"encoding/binary"
-	"fmt"
 	fio "github.com/mxyns/go-tcp/fileio"
 	"github.com/mxyns/go-tcp/filet/requests"
+	log "github.com/sirupsen/logrus"
 	"net"
 	"os"
 	"strings"
@@ -45,7 +45,7 @@ func (fr *FileRequest) Info() *requests.RequestInfo { return fr.info }
 func (fr *FileRequest) DataSize() uint32 {
 	stat, err := os.Stat(fr.path)
 	if err != nil || stat.IsDir() || stat.Size() > 1<<32-1 {
-		fmt.Printf("Error while evaluating file %v's size : %v\n", fr.path, err)
+		log.Error("Error while evaluating file %v's size : %v\n", fr.path, err)
 		return 0
 	}
 
@@ -75,7 +75,7 @@ func (fr *FileRequest) DeserializeFrom(conn *net.Conn) (requests.Request, error)
 
 	fr.path = name
 	fr.filesize = wrote
-	fmt.Printf("File received, %v bytes saved to %v.\n", wrote, fr.path)
+	log.Info("File received, %v bytes saved to %v.\n", wrote, fr.path)
 	return fr, nil
 }
 
