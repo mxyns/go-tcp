@@ -41,7 +41,7 @@ func StreamFromFile(conn *net.Conn, file_path string) (uint32, error) {
 		if err != nil {
 			log.WithFields(log.Fields{
 				"error": err,
-			}).Info("Stopped reading")
+			}).Error("Stopped reading")
 			if err == io.EOF {
 				return sum, nil
 			} else {
@@ -109,10 +109,9 @@ func WriteStreamToFile(conn *net.Conn, folder string, data_length uint32) (strin
 			}).Error("Didn't save all info I read")
 			break
 		}
-		log.Info("%v written \n", n_saved)
 		log.WithFields(log.Fields{
 			"count": n_saved,
-		}).Error("wrote bytes")
+		}).Debug("wrote bytes")
 
 		if read += uint32(n_saved); read >= data_length {
 			return f.Name(), read, nil
