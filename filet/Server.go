@@ -50,7 +50,7 @@ func (s *Server) Start() {
 		s.Clients = append(s.Clients, &socket)
 		go func() {
 			log.WithFields(log.Fields{
-				"address": socket.RemoteAddr(),
+				"address": socket.RemoteAddr().String(),
 			}).Debug("Client connected")
 			defer socket.Close()
 			s.handleClient(&socket)

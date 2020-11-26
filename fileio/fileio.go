@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const MAX_FILE_BUFFER_SIZE = 8192
+var MAX_FILE_BUFFER_SIZE uint32 = 8192
 
 func ClearDir(path string) {
 

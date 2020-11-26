@@ -11,9 +11,12 @@ import (
 	"strings"
 )
 
-const (
+var (
 	TARGET_DIRECTORY = "dl"
-	FILE_REQUEST_ID  = 2
+)
+
+const (
+	FILE_REQUEST_ID = 2
 )
 
 type FileRequest struct {
