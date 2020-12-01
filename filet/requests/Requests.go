@@ -6,7 +6,7 @@ import (
 )
 
 /*
-   id == 0 => reservé
+   id == 0 => reservé (Pack)
       == 1 => image
   		=> length => read => save => send id
       == 1 => filtres + image
@@ -44,7 +44,7 @@ func (req *RequestInfo) BuildFrom(conn *net.Conn) Request {
 	tyqe := requestRegister[req.Id]
 	if tyqe != nil {
 
-		received, err := requestRegister[req.Id](req).DeserializeFrom(conn)
+		received, err := tyqe(req).DeserializeFrom(conn)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"error": err,
@@ -60,7 +60,7 @@ func (req *RequestInfo) BuildFrom(conn *net.Conn) Request {
 }
 func RegisterRequestType(id byte, generator func(reqInfo *RequestInfo) Request) {
 
-	tyqe := generator(&RequestInfo{Id: 0}).Name()
+	tyqe := generator(&RequestInfo{Id: id}).Name()
 
 	if requestRegister[id] == nil {
 		log.WithFields(log.Fields{

@@ -22,6 +22,7 @@ func init() {
 }
 
 func MakeTextRequest(text string) *TextRequest {
+
 	return &TextRequest{
 		info: &requests.RequestInfo{Id: TEXT_REQUEST_ID, WantsResponse: false},
 		text: text,
@@ -44,6 +45,7 @@ func (tr *TextRequest) SerializeTo(conn *net.Conn) error {
 }
 func (tr *TextRequest) DeserializeFrom(conn *net.Conn) (requests.Request, error) {
 
+	// TODO move to RequestInfo
 	length := make([]byte, requests.LENGTH_SIZE)
 	_, err := (*conn).Read(length)
 	if err != nil {

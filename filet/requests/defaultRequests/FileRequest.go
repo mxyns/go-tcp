@@ -20,10 +20,9 @@ const (
 )
 
 type FileRequest struct {
-	info          *requests.RequestInfo
-	path          string // path of file (input path if on sender's side, output path on receiver's side)
-	filesize      uint32
-	wantsResponse bool
+	info     *requests.RequestInfo
+	path     string // path of file (input path if on sender's side, output path on receiver's side)
+	filesize uint32
 }
 
 func init() {

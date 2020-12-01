@@ -4,11 +4,12 @@ package filet
 import (
 	"github.com/mxyns/go-tcp/filet/requests"
 	log "github.com/sirupsen/logrus"
+	"math"
 	"net"
 	"sync"
 )
 
-const MAX_REQUEST_ID = 255
+const MAX_REQUEST_ID = math.MaxUint8 // 255
 
 type Server struct {
 	*Address
@@ -43,10 +44,12 @@ func (s *Server) Start() {
 			log.WithFields(log.Fields{
 				"error": err,
 			}).Error("Couldn't accept incoming connection")
+			continue
 		}
 
 		s.ConnectionWaiter.Add(1)
 
+		// TODO not increase array like a dummy
 		s.Clients = append(s.Clients, &socket)
 		go func() {
 			log.WithFields(log.Fields{
@@ -88,6 +91,7 @@ func (s *Server) handleClient(socket *net.Conn) {
 			log.WithFields(log.Fields{
 				"id": err_id,
 			}).Error("Error : unknown id")
+			break
 		} else {
 			log.WithFields(log.Fields{
 				"error": err,

@@ -17,12 +17,13 @@ type Pack struct {
 	requests   []*Request
 	packedInfo *RequestInfo
 
-	/* indicative Id for receiver
-	from 0 -> max(uint32)/2 Id for Request
-	from max(uint32)/2 + 1 -> max(uint32) Id for Response / Result
-	Result Id = Request Id + max(uint16)
-		=> 	we know when receiving a Request if it's a reply or not
-			by : isReply = subId > max(uint32) / 2
+	/*
+		indicative Id for receiver
+		from 0 -> max(uint32)/2 Id for Request
+		from max(uint32)/2 + 1 -> max(uint32) Id for Response / Result
+		Result Id = Request Id + max(uint16)
+			=> 	we know when receiving a Request if it's a reply or not
+				by : isReply = subId > max(uint32) / 2
 	*/
 
 	SubId   uint32
